@@ -160,14 +160,28 @@
         <div class="dashboard-wrapper" id="pannelloStatistiche">
             <div class="filter-bar">
                 <strong>📅 Filtra: </strong>
-                <select id="filtroTempo" onchange="cambiaFiltro()">
-                    <option value="all" selected>Storico Completo</option>
-                    <option value="today">Oggi</option>
-                    <option value="7days">Ultimi 7 Giorni</option>
-                    <option value="30days">Ultimi 30 Giorni</option>
-                    <option value="january">gennaio</option>
-                    <option value="this_year">Anno Corrente</option>
-                </select>
+<select id="filtroTempo" onchange="cambiaFiltro()">
+    <option value="all" selected>Storico Completo</option>
+    <option value="today">Oggi</option>
+    <option value="7days">Ultimi 7 Giorni</option>
+    <option value="30days">Ultimi 30 Giorni</option>
+    <option value="this_year">Anno Corrente</option>
+    
+    <option disabled>──────────</option>
+    
+    <option value="month-0">Gennaio</option>
+    <option value="month-1">Febbraio</option>
+    <option value="month-2">Marzo</option>
+    <option value="month-3">Aprile</option>
+    <option value="month-4">Maggio</option>
+    <option value="month-5">Giugno</option>
+    <option value="month-6">Luglio</option>
+    <option value="month-7">Agosto</option>
+    <option value="month-8">Settembre</option>
+    <option value="month-9">Ottobre</option>
+    <option value="month-10">Novembre</option>
+    <option value="month-11">Dicembre</option>
+</select>
             </div>
             <div class="dashboard-container">
                 <div class="stat-card"><h3>Ore Totali</h3><div class="value" id="statOre">0 h</div></div>
@@ -499,4 +513,5 @@
 </body>
 
 </html>
+
 
