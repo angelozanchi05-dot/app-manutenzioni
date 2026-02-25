@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Manutenzioni Enterprise</title>
+    <title>Gestione Manutenzioni </title>
     <link rel="icon" type="image/png" href="favicon.png">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -159,12 +159,13 @@
 
         <div class="dashboard-wrapper" id="pannelloStatistiche">
             <div class="filter-bar">
-                <strong>📅 Filtra Analisi: </strong>
+                <strong>📅 Filtra: </strong>
                 <select id="filtroTempo" onchange="cambiaFiltro()">
-                    <option value="all" selected>Storico Completo (Tutto)</option>
+                    <option value="all" selected>Storico Completo</option>
                     <option value="today">Oggi</option>
                     <option value="7days">Ultimi 7 Giorni</option>
                     <option value="30days">Ultimi 30 Giorni</option>
+                    <option value="january">gennaio</option>
                     <option value="this_year">Anno Corrente</option>
                 </select>
             </div>
@@ -498,3 +499,4 @@
 </body>
 
 </html>
+
