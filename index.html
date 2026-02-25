@@ -58,6 +58,11 @@
         th, td { border-bottom: 1px solid var(--border-color); padding: 10px; text-align: left; }
         th { background-color: var(--header-bg); color: #ffffff; }
         tr:hover { background-color: var(--table-hover); }
+        
+        /* Stile per rendere cliccabili le intestazioni di colonna */
+        .sortable { cursor: pointer; user-select: none; transition: background 0.3s; }
+        .sortable:hover { background-color: #333; }
+
         .btn-small { padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; color: white; margin-right: 5px; }
         .btn-pdf { background-color: #007bff; }
         .btn-delete { background-color: #dc3545; }
@@ -182,7 +187,7 @@
             <div class="dashboard-container">
                 <div class="stat-card"><h3>Ore Totali</h3><div class="value" id="statOre">0 h</div></div>
                 <div class="stat-card"><h3>Costo Stimato</h3><div class="value" id="statCosti">0,00 €</div></div>
-                <div class="stat-card"><h3>Macchina più problematica</h3><div class="value" id="statMacchina" Guasti\o style="font-size: 18px;">-</div></div>
+                <div class="stat-card"><h3>Macchina più problematica</h3><div class="value" id="statMacchina" style="font-size: 18px;">-</div></div>
             </div>
             <div class="charts-container">
                 <div class="chart-card"><canvas id="graficoCause"></canvas></div>
@@ -203,7 +208,7 @@
                     <div class="form-group"><label>Note / Ricambi usati</label><textarea id="materiale" rows="3"></textarea></div>
                     
                     <div class="form-group" style="background: var(--input-bg); padding: 15px; border-radius: 4px; border: 1px solid var(--border-color);">
-                        <label style="color: var(--theme-color);">✍️ Firma Operatore</label>
+                        <label style="color: var(--theme-color);">✍️ Firma Operatore (Usa il dito sul tablet)</label>
                         <canvas id="firmaPad" width="350" height="150" style="border: 2px dashed #ccc; border-radius: 4px; touch-action: none; background: #fff; width: 100%; max-width: 400px; display: block; margin-bottom: 10px; cursor: crosshair;"></canvas>
                         <button type="button" class="btn-secondary btn-small" onclick="pulisciFirma()">Cancella e Riprova</button>
                     </div>
@@ -221,7 +226,18 @@
             <div class="card table-section">
                 <h2>Storico Interventi</h2>
                 <table>
-                    <thead><tr><th>Data</th><th>Impianto</th><th>Macchina</th><th>Tipo</th><th>Ore</th><th>Operatore</th><th>Dettagli</th><th>Azioni</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th data-sort="data" onclick="ordinaTabella('data')" class="sortable">Data 🔽</th>
+                            <th data-sort="impianto" onclick="ordinaTabella('impianto')" class="sortable">Impianto</th>
+                            <th data-sort="macchina" onclick="ordinaTabella('macchina')" class="sortable">Macchina</th>
+                            <th data-sort="causa" onclick="ordinaTabella('causa')" class="sortable">Tipo</th>
+                            <th data-sort="ore" onclick="ordinaTabella('ore')" class="sortable">Ore</th>
+                            <th data-sort="operatore" onclick="ordinaTabella('operatore')" class="sortable">Operatore</th>
+                            <th>Dettagli</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
                     <tbody id="tabellaStorico"><tr><td colspan="8" style="text-align:center;">Caricamento...</td></tr></tbody>
                 </table>
             </div>
@@ -261,13 +277,7 @@
         // !!! INSERISCI QUI LE TUE CHIAVI FIREBASE !!!
         // ==========================================
         const firebaseConfig = {
-            apiKey: "AIzaSyAb5R2aeHVkpBhYOLwHCwtnfoW7R5zGeO4",
-  authDomain: "manutenzione-d2f13.firebaseapp.com",
-  projectId: "manutenzione-d2f13",
-  storageBucket: "manutenzione-d2f13.firebasestorage.app",
-  messagingSenderId: "145108065762",
-  appId: "1:145108065762:web:df1b4edc7c305cbf32adbb"
-
+            // INCOLLA LE TUE CHIAVI QUI DENTRO!
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -278,11 +288,14 @@
         let chartCauseInstance = null; let chartMacchineInstance = null;
         let filtroTempoAttuale = 'all'; let currentUserRole = 'operatore'; 
 
+        // --- VARIABILI PER L'ORDINAMENTO COLONNE ---
+        let colSortAttuale = 'data';
+        let ordineCresc = false; // Falso = Dal più nuovo al più vecchio
+
         // --- MOTORE FIRMA DIGITALE ---
         const canvasFirma = document.getElementById('firmaPad');
         const ctxFirma = canvasFirma.getContext('2d');
-        let stoFirmando = false;
-        let lastX = 0, lastY = 0;
+        let stoFirmando = false; let lastX = 0, lastY = 0;
 
         function ottieniCoordinate(e) {
             const rect = canvasFirma.getBoundingClientRect();
@@ -293,15 +306,10 @@
 
         function disegnaFirma(e) {
             if (!stoFirmando) return;
-            e.preventDefault(); // Blocca lo scorrimento della pagina mentre firmi
+            e.preventDefault(); 
             const [x, y] = ottieniCoordinate(e);
-            ctxFirma.beginPath();
-            ctxFirma.moveTo(lastX, lastY);
-            ctxFirma.lineTo(x, y);
-            ctxFirma.strokeStyle = '#000000';
-            ctxFirma.lineWidth = 2.5;
-            ctxFirma.lineCap = 'round';
-            ctxFirma.stroke();
+            ctxFirma.beginPath(); ctxFirma.moveTo(lastX, lastY); ctxFirma.lineTo(x, y);
+            ctxFirma.strokeStyle = '#000000'; ctxFirma.lineWidth = 2.5; ctxFirma.lineCap = 'round'; ctxFirma.stroke();
             [lastX, lastY] = [x, y];
         }
 
@@ -314,13 +322,7 @@
         canvasFirma.addEventListener('touchend', () => stoFirmando = false);
 
         function pulisciFirma() { ctxFirma.clearRect(0, 0, canvasFirma.width, canvasFirma.height); }
-        
-        function controlloFirmaVuota() {
-            const blank = document.createElement('canvas');
-            blank.width = canvasFirma.width; blank.height = canvasFirma.height;
-            return canvasFirma.toDataURL() === blank.toDataURL();
-        }
-        // -----------------------------
+        function controlloFirmaVuota() { const blank = document.createElement('canvas'); blank.width = canvasFirma.width; blank.height = canvasFirma.height; return canvasFirma.toDataURL() === blank.toDataURL(); }
 
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -366,16 +368,27 @@
 
         function cambiaFiltro() { 
             filtroTempoAttuale = document.getElementById('filtroTempo').value; 
-            if(filtroTempoAttuale === 'specific_month') {
-                document.getElementById('sceltaMese').style.display = 'inline-block';
-            } else {
-                document.getElementById('sceltaMese').style.display = 'none';
-            }
+            if(filtroTempoAttuale === 'specific_month') { document.getElementById('sceltaMese').style.display = 'inline-block'; } 
+            else { document.getElementById('sceltaMese').style.display = 'none'; }
             aggiornaVista(); 
+        }
+
+        // --- NUOVA FUNZIONE PER CAMBIARE ORDINAMENTO AL CLICK ---
+        function ordinaTabella(colonna) {
+            if (colSortAttuale === colonna) {
+                ordineCresc = !ordineCresc; // Inverti ordine se clicco la stessa colonna
+            } else {
+                colSortAttuale = colonna;
+                ordineCresc = true; // Di base crescente
+                if (colonna === 'data') ordineCresc = false; // La data la facciamo partire decrescente
+            }
+            aggiornaVista();
         }
 
         function aggiornaVista() {
             const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            // 1. FILTRA I DATI
             if (filtroTempoAttuale === 'all') { datiFiltrati = [...datiCorrenti]; } 
             else {
                 datiFiltrati = datiCorrenti.filter(record => {
@@ -392,7 +405,35 @@
                     return true;
                 });
             }
-            renderTabella(datiFiltrati); if(currentUserRole === 'admin') aggiornaDashboard(datiFiltrati);
+
+            // 2. ORDINA I DATI (Il nuovo cervello!)
+            datiFiltrati.sort((a, b) => {
+                let valA = a[colSortAttuale] || '';
+                let valB = b[colSortAttuale] || '';
+
+                if (colSortAttuale === 'ore') {
+                    return ordineCresc ? parseFloat(valA) - parseFloat(valB) : parseFloat(valB) - parseFloat(valA);
+                }
+
+                valA = valA.toString().toLowerCase();
+                valB = valB.toString().toLowerCase();
+
+                if (valA < valB) return ordineCresc ? -1 : 1;
+                if (valA > valB) return ordineCresc ? 1 : -1;
+                return 0;
+            });
+
+            // Aggiorna le freccine grafiche nelle intestazioni (🔼 o 🔽)
+            document.querySelectorAll('.sortable').forEach(th => {
+                th.innerHTML = th.innerHTML.replace(' 🔼', '').replace(' 🔽', ''); // Pulisci vecchie frecce
+                if (th.getAttribute('data-sort') === colSortAttuale) {
+                    th.innerHTML += ordineCresc ? ' 🔼' : ' 🔽'; // Aggiungi freccia nuova
+                }
+            });
+
+            // 3. DISEGNA TABELLA E GRAFICI
+            renderTabella(datiFiltrati); 
+            if(currentUserRole === 'admin') aggiornaDashboard(datiFiltrati);
         }
 
         function caricaStrutturaImpianti() { db.collection("configurazioni").doc("impianti").onSnapshot((doc) => { if (doc.exists) { strutturaAzienda = doc.data(); } else { strutturaAzienda = {}; db.collection("configurazioni").doc("impianti").set({}); } aggiornaSelectImpianti(); renderStrutturaUI(); }); }
@@ -410,7 +451,13 @@
         function apriImpostazioni() { document.getElementById('settingsModal').style.display = 'flex'; }
         function chiudiImpostazioni() { document.getElementById('settingsModal').style.display = 'none'; }
 
-        function caricaDatiStorico() { db.collection("manutenzioni").orderBy("data", "desc").onSnapshot((qs) => { datiCorrenti = qs.docs.map(doc => ({ id: doc.id, ...doc.data() })); aggiornaVista(); }); }
+        // --- RIMOSSO L'ORDER-BY DI FIREBASE (FACCIA TUTTO IN LOCALE) ---
+        function caricaDatiStorico() { 
+            db.collection("manutenzioni").onSnapshot((qs) => { 
+                datiCorrenti = qs.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
+                aggiornaVista(); 
+            }); 
+        }
 
         function renderTabella(dati) {
             const tbody = document.getElementById('tabellaStorico'); tbody.innerHTML = '';
@@ -439,12 +486,8 @@
         document.getElementById('manutenzioneForm').addEventListener('submit', async function(e) {
             e.preventDefault(); 
             const btn = document.querySelector('button[type="submit"]'); btn.innerText = "Salvataggio..."; btn.disabled = true;
-            
-            // --- GESTIONE FOTO E FIRMA ---
-            let fotoUrl = null; 
-            const fileInput = document.getElementById('fotoIntervento'); const file = fileInput.files[0];
-            let firmaBase64 = null;
-            if (!controlloFirmaVuota()) { firmaBase64 = canvasFirma.toDataURL('image/png'); }
+            let fotoUrl = null; const fileInput = document.getElementById('fotoIntervento'); const file = fileInput.files[0];
+            let firmaBase64 = null; if (!controlloFirmaVuota()) { firmaBase64 = canvasFirma.toDataURL('image/png'); }
 
             try {
                 if (file) {
@@ -453,22 +496,13 @@
                     const data = await response.json(); if (data.success) fotoUrl = data.data.url;
                 }
                 const nr = { 
-                    data: document.getElementById('data').value, 
-                    operatore: document.getElementById('operatore').value, 
-                    impianto: document.getElementById('impiantoSelect').value, 
-                    macchina: document.getElementById('macchinaSelect').value, 
-                    causa: document.getElementById('causa').value, 
-                    ore: parseFloat(document.getElementById('ore').value), 
-                    materiale: document.getElementById('materiale').value || "", 
-                    foto: fotoUrl,
-                    firma: firmaBase64 // Salvataggio della firma
+                    data: document.getElementById('data').value, operatore: document.getElementById('operatore').value, 
+                    impianto: document.getElementById('impiantoSelect').value, macchina: document.getElementById('macchinaSelect').value, 
+                    causa: document.getElementById('causa').value, ore: parseFloat(document.getElementById('ore').value), 
+                    materiale: document.getElementById('materiale').value || "", foto: fotoUrl, firma: firmaBase64 
                 };
                 await db.collection("manutenzioni").add(nr);
-                
-                // Reset form e firma
-                document.getElementById('manutenzioneForm').reset(); 
-                document.getElementById('data').valueAsDate = new Date(); 
-                pulisciFirma();
+                document.getElementById('manutenzioneForm').reset(); document.getElementById('data').valueAsDate = new Date(); pulisciFirma();
                 btn.innerText = "Registra Intervento"; btn.disabled = false; 
             } catch (err) { alert("Errore: " + err.message); btn.innerText = "Registra Intervento"; btn.disabled = false; }
         });
@@ -482,19 +516,10 @@
             document.getElementById('pdfMacchina').innerText = r.macchina; document.getElementById('pdfCausa').innerText = r.causa; 
             document.getElementById('pdfOre').innerText = r.ore; document.getElementById('pdfOperatore').innerText = r.operatore || "-"; 
             document.getElementById('pdfMateriale').innerText = r.materiale || "-";
-            
-            // Gestione foto nel PDF
             const cF = document.getElementById('pdfContainerFoto'); const iF = document.getElementById('pdfFotoIntervento');
             if (r.foto) { iF.src = r.foto; cF.style.display = 'block'; } else { iF.src = ""; cF.style.display = 'none'; }
-            
-            // Gestione FIRMA nel PDF
             const imgFirma = document.getElementById('pdfImmagineFirma');
-            if (r.firma) {
-                imgFirma.src = r.firma; imgFirma.style.display = 'inline-block';
-            } else {
-                imgFirma.src = ""; imgFirma.style.display = 'none';
-            }
-
+            if (r.firma) { imgFirma.src = r.firma; imgFirma.style.display = 'inline-block'; } else { imgFirma.src = ""; imgFirma.style.display = 'none'; }
             const h = document.querySelector('header'); const d = document.getElementById('pannelloStatistiche'); const m = document.querySelector('.main-content'); const mod = document.getElementById('settingsModal'); const p = document.getElementById('pdfTemplate');
             h.style.display = 'none'; d.style.display = 'none'; m.style.display = 'none'; mod.style.display = 'none'; p.style.display = 'block'; 
             setTimeout(() => { window.print(); p.style.display = 'none'; h.style.display = 'flex'; m.style.display = 'flex'; d.style.display = ''; applicaPermessiUI(); }, 500);
