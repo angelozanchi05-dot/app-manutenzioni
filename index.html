@@ -251,13 +251,13 @@
                     <div class="form-group"><label>Note / Ricambi usati</label><textarea id="materiale" rows="3"></textarea></div>
                     
                     <div class="form-group" style="background: var(--input-bg); padding: 15px; border-radius: 4px; border: 1px solid var(--border-color);">
-                        <label style="color: var(--theme-color);">✍️ Mèt zó la firma ché</label>
+                        <label style="color: var(--theme-color);">✍️ Firma (col dito)</label>
                         <canvas id="firmaPad" width="350" height="150" style="border: 2px dashed #ccc; border-radius: 4px; touch-action: none; background: #fff; width: 100%; max-width: 400px; display: block; margin-bottom: 10px; cursor: crosshair;"></canvas>
                         <button type="button" class="btn-secondary btn-small" onclick="pulisciFirma()">Cancella e Riprova</button>
                     </div>
 
                     <div class="form-group" style="background: #f4f7f6; padding: 15px; border-radius: 4px; border: 1px dashed var(--theme-color);">
-                        <label style="color: var(--theme-color);">📷 Mèt zó la foto (mia per fòrsa)</label>
+                        <label style="color: var(--theme-color);">📷 Allega foto (mia per fòrsa)</label>
                         <input type="file" id="fotoIntervento" accept="image/*" capture="environment" style="border: none; background: transparent; padding: 0;">
                         <small style="color: #666; display: block; margin-top: 5px;">Scatta dal tablet o carica dal PC.</small>
                     </div>
@@ -294,7 +294,7 @@
                         <h3>Giösta sö i laùr</h3>
                         <div class="form-group"><label>Nome Azienda</label><div class="flex-row"><input type="text" id="setNometitolo"><button onclick="salvaImpostazioneBase('titoloAzienda', 'setNometitolo', 'siteTitle')" class="btn-secondary" style="width:auto;">Salva</button></div></div>
                         <div class="flex-row"><div class="form-group" style="flex:1;"><label>Colore Tema</label><input type="color" id="setColoreTema" style="height:40px; padding:0; cursor:pointer;"></div><button onclick="salvaColoreTema()" class="btn-secondary" style="height:40px; margin-bottom:15px;">Applica</button></div>
-                        <div class="form-group"><label><input type="checkbox" id="themeToggle" onchange="toggleTema()"> Abilita Dark Mode</label></div>
+                        <div class="form-group"><label><input type="checkbox" id="themeToggle" onchange="toggleTema()"> Fa dientà noc</label></div>
                         <div class="form-group" style="margin-top:20px;"><label>Costo Orario Manodopera (€/h)</label><div class="flex-row"><input type="number" id="setCostoOrario" step="0.1" min="0"><button onclick="salvaImpostazioneBase('costoOrario', 'setCostoOrario', null)" class="btn-secondary" style="width:auto;">Salva</button></div></div>
                         <hr><button onclick="esportaCSV()" class="btn-primary" style="background-color: #2e7d32;">⬇️Tira fò 'l fòi de Excel</button>
                     </div>
